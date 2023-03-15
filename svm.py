@@ -5,6 +5,9 @@ from sklearn.model_selection import train_test_split
 from matplotlib.pylab import plt
 from sklearn.utils import shuffle
 from sklearn.metrics import accuracy_score
+from tqdm import tqdm
+
+
 #reference:Dynamic Time-Alignment Kernel in Support Vector Machine
 def dtw_kernel(X,Y):
     """
@@ -15,7 +18,7 @@ def dtw_kernel(X,Y):
     x_sample_num = len(X)
     y_sample_num = len(Y)
     result = np.zeros(shape = [x_sample_num,y_sample_num])
-    for i in range(x_sample_num):
+    for i in tqdm(range(x_sample_num)):
         for t in range(y_sample_num):
             x = X[i]
             y = Y[t]
@@ -33,14 +36,16 @@ def dtw_kernel(X,Y):
     return result
 
 clf = svm.SVC(kernel=dtw_kernel,C=10,gamma=2.0)
+max_traj_len = 20
 total_traj_num = 1000
 X_total = []
 Y_total = []
 for i in range(total_traj_num):
     df = pd.read_csv('traj/{}.csv'.format(i))
     if len(df)>0:
-        X = np.zeros([len(df),2])
-        for j in range(len(df)):
+        l = min(len(df),max_traj_len)
+        X = np.zeros([l,2])
+        for j in range(l):
             X[j][0] = df.loc[j,"Latitude"]
             X[j][1] = df.loc[j,"Longitude"]
         X_total.append(X)
@@ -49,6 +54,8 @@ for i in range(total_traj_num):
         else:
             Y_total.append(0)
 X_train, X_test, Y_train, Y_test = train_test_split(X_total, Y_total, test_size = 0.2, random_state = 0)
+#gram_train = dtw_kernel(X_train,X_train)
 clf.fit(X_train,Y_train)
+#gram_test = dtw_kernel(X_test,X_train)
 Y_pred = clf.predict(X_test)
 print(accuracy_score(Y_test,Y_pred))
