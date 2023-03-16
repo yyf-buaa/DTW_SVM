@@ -1,3 +1,6 @@
+import datetime
+import logging
+
 import numpy as np
 import pandas as pd
 from sklearn import svm,datasets
@@ -7,7 +10,9 @@ from sklearn.utils import shuffle
 from sklearn.metrics import accuracy_score
 from tqdm import tqdm
 
-
+a = datetime.datetime.now()
+b = a.strftime('%Y-%m-%d %H-%M-%S')
+logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=logging.INFO,filename='log/'+b+'.log',filemode='w')
 #reference:Dynamic Time-Alignment Kernel in Support Vector Machine
 def dtw_kernel(X,Y):
     """
@@ -37,7 +42,9 @@ def dtw_kernel(X,Y):
 
 clf = svm.SVC(kernel=dtw_kernel,C=10,gamma=2.0)
 max_traj_len = 20
-total_traj_num = 1000
+total_traj_num = 10
+logging.info("max trajactory length:{}".format(max_traj_len))
+logging.info("total trajactory number:{}".format(total_traj_num))
 X_total = []
 Y_total = []
 for i in range(total_traj_num):
@@ -54,8 +61,12 @@ for i in range(total_traj_num):
         else:
             Y_total.append(0)
 X_train, X_test, Y_train, Y_test = train_test_split(X_total, Y_total, test_size = 0.2, random_state = 0)
-#gram_train = dtw_kernel(X_train,X_train)
+logging.info("finish split train and test dataset")
+logging.info("trainset length:{}".format(len(X_train)))
+logging.info("testset length:{}".format(len(X_test)))
 clf.fit(X_train,Y_train)
-#gram_test = dtw_kernel(X_test,X_train)
+logging.info("finish fit")
 Y_pred = clf.predict(X_test)
-print(accuracy_score(Y_test,Y_pred))
+logging.info("finish predict")
+score = accuracy_score(Y_test,Y_pred)
+logging.info("accuracy:{}".format(score))
